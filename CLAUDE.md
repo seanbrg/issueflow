@@ -74,9 +74,9 @@ Constraints:
 Fields: `id`, `title`, `description`, `status` (enum), `priority` (enum), `type` (enum), `projectId` (FK), `assigneeId` (FK → User, nullable), `dueDate` (ISO-8601, optional), `isOverdue` (computed/stored), `deletedAt`, `createdAt`, `version` (optimistic locking)
 
 Enums:
-- `status`: `TODO` → `IN_PROGRESS` → `DONE` (forward-only)
+- `status`: `TODO` → `IN_PROGRESS` → `IN_REVIEW` → `DONE` (forward-only)
 - `priority`: `LOW`, `MEDIUM`, `HIGH`, `CRITICAL`
-- `type`: `BUG`, `FEATURE`, `TASK`
+- `type`: `BUG`, `FEATURE`, `TECHNICAL`
 
 Constraints:
 - Belongs to exactly one project
@@ -143,27 +143,27 @@ All endpoints return `200 OK` on success unless otherwise noted. Soft-deleted re
 | GET | `/users/:userId/mentions` | All comments mentioning this user, newest first (paginated). Query params: `page`, `pageSize` | |
 
 ### Projects
-| Method | Path | Description | Status |
-|--------|------|-------------|--------|
-| GET | `/projects` | Fetch all active projects | Implemented |
-| POST | `/projects` | Create project (`name`, `description`, `ownerId`) | Implemented |
-| GET | `/projects/:projectId` | Fetch project by id | Implemented |
-| PATCH | `/projects/:projectId` | Update `name` or `description` | Implemented |
-| DELETE | `/projects/:projectId` | Soft-delete project | Implemented |
-| GET | `/projects/deleted` | List soft-deleted projects (ADMIN only) | |
-| POST | `/projects/:projectId/restore` | Restore soft-deleted project (ADMIN only) | |
-| GET | `/projects/:projectId/workload` | `[{ userId, username, openTicketCount }]` sorted ascending | |
+| Method | Path | Description | Status                    |
+|--------|------|-------------|---------------------------|
+| GET | `/projects` | Fetch all active projects | Implemented               |
+| POST | `/projects` | Create project (`name`, `description`, `ownerId`) | Implemented               |
+| GET | `/projects/:projectId` | Fetch project by id | Implemented               |
+| PATCH | `/projects/:projectId` | Update `name` or `description` | Implemented               |
+| DELETE | `/projects/:projectId` | Soft-delete project | Implemented               |
+| GET | `/projects/deleted` | List soft-deleted projects (ADMIN only) | Implemented (no ADMIN enforcement) |
+| POST | `/projects/:projectId/restore` | Restore soft-deleted project (ADMIN only) | Implemented (no ADMIN enforcement) |
+| GET | `/projects/:projectId/workload` | `[{ userId, username, openTicketCount }]` sorted ascending |                           |
 
 ### Tickets
 | Method | Path | Description | Status |
 |--------|------|-------------|--------|
-| GET | `/tickets?projectId=:projectId` | Fetch all active tickets for a project | |
-| POST | `/tickets` | Create ticket (`title`, `description`, `status`, `priority`, `type`, `projectId`, optional `assigneeId`, optional `dueDate`) | |
-| GET | `/tickets/:ticketId` | Fetch ticket by id | |
-| PATCH | `/tickets/:ticketId` | Update ticket fields (cannot update DONE tickets; status forward-only) | |
-| DELETE | `/tickets/:ticketId` | Soft-delete ticket | |
-| GET | `/tickets/deleted?projectId=:projectId` | List soft-deleted tickets (ADMIN only) | |
-| POST | `/tickets/:ticketId/restore` | Restore soft-deleted ticket (ADMIN only) | |
+| GET | `/tickets?projectId=:projectId` | Fetch all active tickets for a project | Implemented |
+| POST | `/tickets` | Create ticket (`title`, `description`, `status`, `priority`, `type`, `projectId`, optional `assigneeId`, optional `dueDate`) | Implemented |
+| GET | `/tickets/:ticketId` | Fetch ticket by id | Implemented |
+| PATCH | `/tickets/:ticketId` | Update ticket fields (cannot update DONE tickets; status forward-only) | Implemented |
+| DELETE | `/tickets/:ticketId` | Soft-delete ticket | Implemented |
+| GET | `/tickets/deleted?projectId=:projectId` | List soft-deleted tickets (ADMIN only) | Implemented (no ADMIN enforcement) |
+| POST | `/tickets/:ticketId/restore` | Restore soft-deleted ticket (ADMIN only) | Implemented (no ADMIN enforcement) |
 | GET | `/tickets/export?projectId=:projectId` | Export tickets as CSV (`id, title, description, status, priority, type, assigneeId`) | |
 | POST | `/tickets/import` | Import tickets from CSV (`multipart/form-data` with `projectId` field). Returns `{ created, failed, errors }` | |
 

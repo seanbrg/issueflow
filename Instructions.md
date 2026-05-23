@@ -1,1 +1,79 @@
+```
+Read CLAUDE.md. Create all JPA entity classes and enums for the domain model:
+User, Project, Ticket, Comment, AuditLog, TicketDependency, Attachment.
+Include all fields, relationships (@ManyToOne, @OneToMany etc.), and Lombok
+annotations. Add @Version fields to Ticket and Comment for optimistic locking.
+Add softDelete (deletedAt) to Ticket and Project. Do not create any
+repositories, services, or controllers yet.
+```
 
+```
+Create JpaRepository interfaces for all entities created in the previous step.
+Add only the custom query methods that will clearly be needed: findByProjectId,
+findByDeletedAtIsNull, findByAssigneeId, etc. Use Spring Data method naming
+conventions where possible, @Query only when necessary.
+```
+
+```
+Review application.yaml for PostgreSQL using the docker compose.yml already
+in the project, and the separate application.yaml in the test module that configures H2 for
+test. Make sure it functions correctly and remove any redundancy.
+```
+
+```
+Implement JWT-based authentication. Create:
+- POST /auth/login — accepts username + password, returns signed JWT
+- POST /auth/logout — server-side token deny-list using an in-memory set
+  (we can persist it later)
+- GET /auth/me — returns the authenticated user's profile
+- A JWT filter that validates the token on every request except /auth/login
+- Configure Spring Security to protect all routes
+
+Do not implement role-based authorization yet, just authentication.
+```
+
+```
+Write an integration test for the auth endpoints using H2. Use
+@SpringBootTest and @AutoConfigureMockMvc. Test the following cases:
+
+1. POST /auth/login with valid credentials returns 200 and a JWT token
+2. POST /auth/login with wrong password returns 401
+3. POST /auth/login with unknown username returns 401
+4. GET /auth/me with a valid JWT returns 200 and the user's profile
+5. GET /auth/me with no token returns 401
+6. GET /auth/me with a malformed token returns 401
+7. POST /auth/logout with a valid JWT returns 200, and a subsequent
+   GET /auth/me with the same token returns 401
+
+Set up test data by saving a User directly via the UserRepository
+in a @BeforeEach method. Use BCryptPasswordEncoder to hash the
+password before saving so login works correctly.
+```
+
+```
+Implement the full Users feature:
+- Service and Controller for GET /users, POST /users, GET /users/:id,
+  POST /users/:id, DELETE /users/:id
+- Request/response DTOs with Bean Validation annotations
+- Global @ControllerAdvice exception handler that returns
+  { "error": "...", "message": "..." } for all error cases
+- Write at least one unit test for the service layer
+```
+
+```
+Implement Projects CRUD: GET/POST /projects, GET/PATCH/DELETE /projects/:id.
+Use the same DTO and error handling patterns established in the Users feature.
+Do not implement soft delete or workload yet — just basic CRUD.
+Write unit tests for the service layer.
+```
+
+```
+Implement basic Ticket CRUD: GET /tickets?projectId=, POST /tickets,
+GET/PATCH/DELETE /tickets/:id.
+Enforce these business rules in the service layer:
+- Status transitions are forward-only (TODO→IN_PROGRESS→IN_REVIEW→DONE)
+- A DONE ticket cannot be updated
+- Return 409 on optimistic lock conflict (@Version)
+  Do not implement auto-assign, dependencies, soft delete, or export yet.
+  Write unit tests covering the status transition rules.
+```
