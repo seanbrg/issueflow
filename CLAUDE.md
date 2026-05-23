@@ -145,11 +145,11 @@ All endpoints return `200 OK` on success unless otherwise noted. Soft-deleted re
 ### Projects
 | Method | Path | Description | Status |
 |--------|------|-------------|--------|
-| GET | `/projects` | Fetch all active projects | |
-| POST | `/projects` | Create project (`name`, `description`, `ownerId`) | |
-| GET | `/projects/:projectId` | Fetch project by id | |
-| PATCH | `/projects/:projectId` | Update `name` or `description` | |
-| DELETE | `/projects/:projectId` | Soft-delete project | |
+| GET | `/projects` | Fetch all active projects | Implemented |
+| POST | `/projects` | Create project (`name`, `description`, `ownerId`) | Implemented |
+| GET | `/projects/:projectId` | Fetch project by id | Implemented |
+| PATCH | `/projects/:projectId` | Update `name` or `description` | Implemented |
+| DELETE | `/projects/:projectId` | Soft-delete project | Implemented |
 | GET | `/projects/deleted` | List soft-deleted projects (ADMIN only) | |
 | POST | `/projects/:projectId/restore` | Restore soft-deleted project (ADMIN only) | |
 | GET | `/projects/:projectId/workload` | `[{ userId, username, openTicketCount }]` sorted ascending | |

@@ -53,9 +53,16 @@ password before saving so login works correctly.
 ```
 Implement the full Users feature:
 - Service and Controller for GET /users, POST /users, GET /users/:id,
-  PATCH /users/:id, DELETE /users/:id
+  POST /users/:id, DELETE /users/:id
 - Request/response DTOs with Bean Validation annotations
 - Global @ControllerAdvice exception handler that returns
   { "error": "...", "message": "..." } for all error cases
 - Write at least one unit test for the service layer
+```
+
+```
+Implement Projects CRUD: GET/POST /projects, GET/PATCH/DELETE /projects/:id.
+Use the same DTO and error handling patterns established in the Users feature.
+Do not implement soft delete or workload yet — just basic CRUD.
+Write unit tests for the service layer.
 ```
