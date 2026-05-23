@@ -9,3 +9,7 @@ Create JpaRepository interfaces for all entities created in the previous step.
 Add only the custom query methods that will clearly be needed: findByProjectId,
 findByDeletedAtIsNull, findByAssigneeId, etc. Use Spring Data method naming
 conventions where possible, @Query only when necessary.
+
+Review application.yaml for PostgreSQL using the docker compose.yml already
+in the project, and the separate application.yaml in the test module that configures H2 for
+test. Make sure it functions correctly and remove any redundancy.
