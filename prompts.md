@@ -49,3 +49,13 @@ Set up test data by saving a User directly via the UserRepository
 in a @BeforeEach method. Use BCryptPasswordEncoder to hash the
 password before saving so login works correctly.
 ```
+
+```
+Implement the full Users feature:
+- Service and Controller for GET /users, POST /users, GET /users/:id,
+  PATCH /users/:id, DELETE /users/:id
+- Request/response DTOs with Bean Validation annotations
+- Global @ControllerAdvice exception handler that returns
+  { "error": "...", "message": "..." } for all error cases
+- Write at least one unit test for the service layer
+```

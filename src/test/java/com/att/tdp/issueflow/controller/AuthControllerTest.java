@@ -52,8 +52,10 @@ class AuthControllerTest {
                                 {"username":"jdoe","password":"s3cr3t!"}
                                 """))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.token").isString())
-                .andExpect(jsonPath("$.token").isNotEmpty());
+                .andExpect(jsonPath("$.accessToken").isString())
+                .andExpect(jsonPath("$.accessToken").isNotEmpty())
+                .andExpect(jsonPath("$.tokenType").value("Bearer"))
+                .andExpect(jsonPath("$.expiresIn").isNumber());
     }
 
     // ── 2. Wrong password → 401 ───────────────────────────────────────────────
@@ -139,8 +141,8 @@ class AuthControllerTest {
                 .andReturn();
 
         String body = result.getResponse().getContentAsString();
-        // Extract token from {"token":"<value>"}
-        String token = body.replaceAll(".*\"token\"\\s*:\\s*\"([^\"]+)\".*", "$1");
+        // Extract accessToken from {"accessToken":"<value>",...}
+        String token = body.replaceAll(".*\"accessToken\"\\s*:\\s*\"([^\"]+)\".*", "$1");
         assertThat(token).isNotBlank().isNotEqualTo(body);
         return token;
     }

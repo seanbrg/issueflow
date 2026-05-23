@@ -26,7 +26,7 @@ public class AuthService {
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword()));
         String token = tokenProvider.generateToken(request.getUsername());
-        return new LoginResponse(token);
+        return new LoginResponse(token, "Bearer", tokenProvider.getExpirationMs() / 1000);
     }
 
     public void logout(String token) {

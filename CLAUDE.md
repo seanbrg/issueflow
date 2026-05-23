@@ -74,9 +74,9 @@ Constraints:
 Fields: `id`, `title`, `description`, `status` (enum), `priority` (enum), `type` (enum), `projectId` (FK), `assigneeId` (FK → User, nullable), `dueDate` (ISO-8601, optional), `isOverdue` (computed/stored), `deletedAt`, `createdAt`, `version` (optimistic locking)
 
 Enums:
-- `status`: `TODO` → `IN_PROGRESS` → `IN_REVIEW` → `DONE` (forward-only)
+- `status`: `TODO` → `IN_PROGRESS` → `DONE` (forward-only)
 - `priority`: `LOW`, `MEDIUM`, `HIGH`, `CRITICAL`
-- `type`: `BUG`, `FEATURE`, `TECHNICAL`
+- `type`: `BUG`, `FEATURE`, `TASK`
 
 Constraints:
 - Belongs to exactly one project
@@ -126,79 +126,135 @@ Constraints:
 All endpoints return `200 OK` on success unless otherwise noted. Soft-deleted records are excluded from normal list/get responses. All endpoints (except `POST /auth/login`) require a valid JWT in the `Authorization: Bearer <token>` header.
 
 ### Auth
-| Method | Path | Description |
-|--------|------|-------------|
-| POST | `/auth/login` | Accepts `{ username, password }`, returns signed JWT |
-| POST | `/auth/logout` | Invalidates current token (server-side deny-list or stateless expiry) |
-| GET | `/auth/me` | Returns profile of the currently authenticated user |
+| Method | Path | Description | Status |
+|--------|------|-------------|--------|
+| POST | `/auth/login` | Accepts `{ username, password }`, returns `{ "accessToken": "<jwt>", "tokenType": "Bearer", "expiresIn": 3600 }` | Implemented |
+| POST | `/auth/logout` | Invalidates current token (server-side deny-list or stateless expiry) | Implemented |
+| GET | `/auth/me` | Returns profile of the currently authenticated user | Implemented |
 
 ### Users
-| Method | Path | Description |
-|--------|------|-------------|
-| GET | `/users` | Fetch all users |
-| POST | `/users` | Register new user (`username`, `email`, `fullName`, `role`, `password`) |
-| GET | `/users/:id` | Fetch user by id |
-| PATCH | `/users/:id` | Update `fullName` or `role` |
-| DELETE | `/users/:id` | Delete user |
-| GET | `/users/:id/mentions` | All comments mentioning this user, newest first (paginated) |
+| Method | Path | Description | Status |
+|--------|------|-------------|--------|
+| GET | `/users` | Fetch all users | Implemented |
+| POST | `/users` | Register new user (`username`, `email`, `fullName`, `role`, `password`) | Implemented |
+| GET | `/users/:userId` | Fetch user by id | Implemented |
+| POST | `/users/update/:userId` | Update `fullName` or `role` | Implemented |
+| DELETE | `/users/:userId` | Delete user | Implemented |
+| GET | `/users/:userId/mentions` | All comments mentioning this user, newest first (paginated). Query params: `page`, `pageSize` | |
 
 ### Projects
-| Method | Path | Description |
-|--------|------|-------------|
-| GET | `/projects` | Fetch all active projects |
-| POST | `/projects` | Create project (`name`, `description`, `ownerId`) |
-| GET | `/projects/:id` | Fetch project by id |
-| PATCH | `/projects/:id` | Update `name` or `description` |
-| DELETE | `/projects/:id` | Soft-delete project |
-| GET | `/projects/deleted` | List soft-deleted projects (ADMIN only) |
-| POST | `/projects/:id/restore` | Restore soft-deleted project (ADMIN only) |
-| GET | `/projects/:id/workload` | `[{ userId, username, openTicketCount }]` sorted ascending |
+| Method | Path | Description | Status |
+|--------|------|-------------|--------|
+| GET | `/projects` | Fetch all active projects | |
+| POST | `/projects` | Create project (`name`, `description`, `ownerId`) | |
+| GET | `/projects/:projectId` | Fetch project by id | |
+| PATCH | `/projects/:projectId` | Update `name` or `description` | |
+| DELETE | `/projects/:projectId` | Soft-delete project | |
+| GET | `/projects/deleted` | List soft-deleted projects (ADMIN only) | |
+| POST | `/projects/:projectId/restore` | Restore soft-deleted project (ADMIN only) | |
+| GET | `/projects/:projectId/workload` | `[{ userId, username, openTicketCount }]` sorted ascending | |
 
 ### Tickets
-| Method | Path | Description |
-|--------|------|-------------|
-| GET | `/tickets?projectId=` | Fetch all active tickets for a project |
-| POST | `/tickets` | Create ticket (`title`, `description`, `status`, `priority`, `type`, `projectId`, optional `assigneeId`, optional `dueDate`) |
-| GET | `/tickets/:id` | Fetch ticket by id |
-| PATCH | `/tickets/:id` | Update ticket fields (cannot update DONE tickets; status forward-only) |
-| DELETE | `/tickets/:id` | Soft-delete ticket |
-| GET | `/tickets/deleted?projectId=` | List soft-deleted tickets (ADMIN only) |
-| POST | `/tickets/:id/restore` | Restore soft-deleted ticket (ADMIN only) |
-| GET | `/tickets/export?projectId=` | Export tickets as CSV (`id, title, description, status, priority, type, assigneeId`) |
-| POST | `/tickets/import` | Import tickets from CSV (`multipart/form-data` with `projectId` field). Returns `{ created, failed, errors }` |
+| Method | Path | Description | Status |
+|--------|------|-------------|--------|
+| GET | `/tickets?projectId=:projectId` | Fetch all active tickets for a project | |
+| POST | `/tickets` | Create ticket (`title`, `description`, `status`, `priority`, `type`, `projectId`, optional `assigneeId`, optional `dueDate`) | |
+| GET | `/tickets/:ticketId` | Fetch ticket by id | |
+| PATCH | `/tickets/:ticketId` | Update ticket fields (cannot update DONE tickets; status forward-only) | |
+| DELETE | `/tickets/:ticketId` | Soft-delete ticket | |
+| GET | `/tickets/deleted?projectId=:projectId` | List soft-deleted tickets (ADMIN only) | |
+| POST | `/tickets/:ticketId/restore` | Restore soft-deleted ticket (ADMIN only) | |
+| GET | `/tickets/export?projectId=:projectId` | Export tickets as CSV (`id, title, description, status, priority, type, assigneeId`) | |
+| POST | `/tickets/import` | Import tickets from CSV (`multipart/form-data` with `projectId` field). Returns `{ created, failed, errors }` | |
 
 ### Comments
-| Method | Path | Description |
-|--------|------|-------------|
-| GET | `/tickets/:id/comments` | Fetch all comments for a ticket |
-| POST | `/tickets/:id/comments` | Add comment (`content`, `authorId`) |
-| PATCH | `/tickets/:id/comments/:cid` | Update comment content; re-evaluates @mentions |
-| DELETE | `/tickets/:id/comments/:cid` | Delete comment |
+| Method | Path | Description | Status |
+|--------|------|-------------|--------|
+| GET | `/tickets/:ticketId/comments` | Fetch all comments for a ticket | |
+| POST | `/tickets/:ticketId/comments` | Add comment (`content`, `authorId`) | |
+| PATCH | `/tickets/:ticketId/comments/:commentId` | Update comment content; re-evaluates @mentions | |
+| DELETE | `/tickets/:ticketId/comments/:commentId` | Delete comment | |
 
 ### Audit Logs
-| Method | Path | Description |
-|--------|------|-------------|
-| GET | `/audit-logs` | Fetch all logs. Filterable by `entityType`, `entityId`, `action`, `actor` query params |
+| Method | Path | Description | Status |
+|--------|------|-------------|--------|
+| GET | `/audit-logs` | Fetch all logs. Filterable by `entityType`, `entityId`, `action`, `actor` query params | |
 
 ### Ticket Dependencies
-| Method | Path | Description |
-|--------|------|-------------|
-| POST | `/tickets/:id/dependencies` | Add dependency: `{ "blockedBy": <ticketId> }` |
-| GET | `/tickets/:id/dependencies` | List all tickets blocking this ticket |
-| DELETE | `/tickets/:id/dependencies/:blockerId` | Remove a specific dependency |
+| Method | Path | Description | Status |
+|--------|------|-------------|--------|
+| POST | `/tickets/:ticketId/dependencies` | Add dependency: `{ "blockedBy": <ticketId> }` | |
+| GET | `/tickets/:ticketId/dependencies` | List all tickets blocking this ticket | |
+| DELETE | `/tickets/:ticketId/dependencies/:blockerId` | Remove a specific dependency | |
 
 ### Attachments
-| Method | Path | Description |
-|--------|------|-------------|
-| POST | `/tickets/:id/attachments` | Upload file (multipart, max 10 MB, allowed types only) |
-| DELETE | `/tickets/:id/attachments/:attachmentId` | Delete attachment |
+| Method | Path | Description | Status |
+|--------|------|-------------|--------|
+| POST | `/tickets/:ticketId/attachments` | Upload file (multipart, max 10 MB, allowed types only) | |
+| DELETE | `/tickets/:ticketId/attachments/:attachmentId` | Delete attachment | |
 
 ---
 
-## Business Logic Rules
+## Response Body Shapes
+
+Key shapes from README that must be matched exactly:
+
+**Login response:**
+```json
+{ "accessToken": "<jwt>", "tokenType": "Bearer", "expiresIn": 3600 }
+```
+
+**User response:**
+```json
+{ "id": 1, "username": "jdoe", "email": "jdoe@example.com", "fullName": "John Doe", "role": "DEVELOPER" }
+```
+
+**Ticket response:**
+```json
+{ "id": 1, "title": "Fix login bug", "description": "...", "status": "TODO", "priority": "HIGH", "type": "BUG", "projectId": 1, "assigneeId": 2, "dueDate": "2026-04-01T00:00:00Z", "isOverdue": false }
+```
+
+**Comment response:**
+```json
+{ "id": 1, "ticketId": 1, "authorId": 2, "content": "Hello @jdoe!", "mentionedUsers": [{ "id": 1, "username": "jdoe", "fullName": "John Doe" }] }
+```
+
+**Dependency list response** (returns ticket summaries, not just IDs):
+```json
+[ { "id": 42, "title": "Blocking ticket", "status": "IN_PROGRESS" } ]
+```
+
+**Attachment upload response:**
+```json
+{ "id": 1, "ticketId": 1, "filename": "screenshot.png", "contentType": "image/png" }
+```
+
+**Audit log response:**
+```json
+[ { "id": 1, "action": "CREATE", "entityType": "TICKET", "entityId": 5, "performedBy": 2, "actor": "USER", "timestamp": "2026-03-01T10:00:00Z" } ]
+```
+
+**Workload response** (sorted by `openTicketCount` ascending):
+```json
+[ { "userId": 1, "username": "jdoe", "openTicketCount": 3 } ]
+```
+
+**Mentions response** (paginated):
+```json
+{ "data": [ { "id": 1, "ticketId": 3, "authorId": 2, "content": "Hey @jdoe...", "mentionedUsers": [{ "id": 1, "username": "jdoe", "fullName": "John Doe" }] } ], "total": 10, "page": 1 }
+```
+
+**CSV import response:**
+```json
+{ "created": 42, "failed": 3, "errors": ["..."] }
+```
+
+---
+
+
 
 ### Status Transition
-- Allowed: `TODO → IN_PROGRESS → IN_REVIEW → DONE`
+- Allowed: `TODO → IN_PROGRESS → DONE`
 - Backward transitions must be rejected with a `400` error
 - A `DONE` ticket cannot be updated at all
 
@@ -259,7 +315,7 @@ All endpoints return `200 OK` on success unless otherwise noted. Soft-deleted re
 
 ## Input Validation & Error Handling
 
-- Reject invalid enum values (status, priority, type, role) with `400 Bad Request`
+- Reject invalid enum values (status, priority, type, role) with `400 Bad Request` — valid values are: status (`TODO`, `IN_PROGRESS`, `DONE`), priority (`LOW`, `MEDIUM`, `HIGH`, `CRITICAL`), type (`BUG`, `FEATURE`, `TASK`), role (`ADMIN`, `DEVELOPER`)
 - Reject missing required fields with `400 Bad Request`
 - Return informative error bodies: `{ "error": "...", "message": "..." }`
 - Use `@Valid` + Bean Validation annotations on all request DTOs
