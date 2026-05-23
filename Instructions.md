@@ -77,3 +77,11 @@ Enforce these business rules in the service layer:
   Do not implement auto-assign, dependencies, soft delete, or export yet.
   Write unit tests covering the status transition rules.
 ```
+
+```
+Implement Comment CRUD: GET/POST /tickets/:id/comments,
+PATCH/DELETE /tickets/:id/comments/:cid.
+Enforce optimistic locking (return 409 on conflict).
+Do not implement @mention parsing yet.
+Write unit tests for the service layer.
+```

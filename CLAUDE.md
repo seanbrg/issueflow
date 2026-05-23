@@ -170,10 +170,10 @@ All endpoints return `200 OK` on success unless otherwise noted. Soft-deleted re
 ### Comments
 | Method | Path | Description | Status |
 |--------|------|-------------|--------|
-| GET | `/tickets/:ticketId/comments` | Fetch all comments for a ticket | |
-| POST | `/tickets/:ticketId/comments` | Add comment (`content`, `authorId`) | |
-| PATCH | `/tickets/:ticketId/comments/:commentId` | Update comment content; re-evaluates @mentions | |
-| DELETE | `/tickets/:ticketId/comments/:commentId` | Delete comment | |
+| GET | `/tickets/:ticketId/comments` | Fetch all comments for a ticket | Implemented |
+| POST | `/tickets/:ticketId/comments` | Add comment (`content`, `authorId`) | Implemented |
+| PATCH | `/tickets/:ticketId/comments/:commentId` | Update comment content; re-evaluates @mentions | Implemented (no @mention parsing) |
+| DELETE | `/tickets/:ticketId/comments/:commentId` | Delete comment | Implemented |
 
 ### Audit Logs
 | Method | Path | Description | Status |
