@@ -15,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.Comparator;
 import java.util.List;
 
 @Service
@@ -48,9 +49,13 @@ public class TicketService {
                 .orElseThrow(() -> new ResourceNotFoundException("Project not found: " + request.getProjectId()));
 
         User assignee = null;
+        boolean autoAssigned = false;
         if (request.getAssigneeId() != null) {
             assignee = userRepository.findById(request.getAssigneeId())
                     .orElseThrow(() -> new ResourceNotFoundException("User not found: " + request.getAssigneeId()));
+        } else {
+            assignee = autoAssign(project.getId());
+            autoAssigned = assignee != null;
         }
 
         Ticket ticket = Ticket.builder()
@@ -67,6 +72,9 @@ public class TicketService {
 
         Ticket saved = ticketRepository.save(ticket);
         auditLogService.log("CREATE", "TICKET", saved.getId(), ActorType.USER);
+        if (autoAssigned) {
+            auditLogService.log("AUTO_ASSIGN", "TICKET", saved.getId(), ActorType.SYSTEM, "SYSTEM");
+        }
         return TicketResponse.from(saved);
     }
 
@@ -117,6 +125,24 @@ public class TicketService {
     }
 
     // ── helpers ───────────────────────────────────────────────────────────────
+
+    /**
+     * Selects the DEVELOPER with the fewest non-DONE tickets in the given project.
+     * Ties are broken by earliest createdAt (oldest registrant first).
+     * Returns null if no DEVELOPER users exist.
+     * Auto-assignment is only triggered on ticket creation, never on update.
+     */
+    private User autoAssign(Long projectId) {
+        List<User> developers = userRepository.findByRole(UserRole.DEVELOPER);
+        if (developers.isEmpty()) return null;
+
+        return developers.stream()
+                .min(Comparator.<User, Long>comparing(dev ->
+                                ticketRepository.countByAssignee_IdAndProject_IdAndStatusNotAndDeletedAtIsNull(
+                                        dev.getId(), projectId, TicketStatus.DONE))
+                        .thenComparing(User::getCreatedAt))
+                .orElse(null);
+    }
 
     private void validateTransition(TicketStatus current, TicketStatus next) {
         if (next.ordinal() < current.ordinal()) {

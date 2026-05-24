@@ -3,6 +3,7 @@ package com.att.tdp.issueflow.controller;
 import com.att.tdp.issueflow.dto.CreateProjectRequest;
 import com.att.tdp.issueflow.dto.ProjectResponse;
 import com.att.tdp.issueflow.dto.UpdateProjectRequest;
+import com.att.tdp.issueflow.dto.WorkloadResponse;
 import com.att.tdp.issueflow.service.ProjectService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -56,5 +57,10 @@ public class ProjectController {
     @PostMapping("/{projectId}/restore")
     public ResponseEntity<ProjectResponse> restore(@PathVariable Long projectId) {
         return ResponseEntity.ok(projectService.restore(projectId));
+    }
+
+    @GetMapping("/{projectId}/workload")
+    public ResponseEntity<List<WorkloadResponse>> getWorkload(@PathVariable Long projectId) {
+        return ResponseEntity.ok(projectService.getWorkload(projectId));
     }
 }

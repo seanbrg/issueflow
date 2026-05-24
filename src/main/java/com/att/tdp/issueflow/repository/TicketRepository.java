@@ -44,16 +44,17 @@ public interface TicketRepository extends JpaRepository<Ticket, Long> {
             @Param("criticalPriority") TicketPriority criticalPriority);
 
     // --- Workload report: open ticket count per assignee in a project ---
-    // Returns rows of [assigneeId (Long), openTicketCount (Long)]
+    // Returns rows of [assigneeId (Long), username (String), openTicketCount (Long)]
 
     @Query("""
-            SELECT t.assignee.id, COUNT(t)
+            SELECT t.assignee.id, t.assignee.username, COUNT(t)
             FROM Ticket t
             WHERE t.project.id = :projectId
               AND t.status <> :doneStatus
               AND t.deletedAt IS NULL
               AND t.assignee IS NOT NULL
-            GROUP BY t.assignee.id
+            GROUP BY t.assignee.id, t.assignee.username
+            ORDER BY COUNT(t) ASC
             """)
     List<Object[]> countOpenTicketsByAssigneeForProject(
             @Param("projectId") Long projectId,

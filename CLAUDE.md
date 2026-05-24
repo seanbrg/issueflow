@@ -152,7 +152,7 @@ All endpoints return `200 OK` on success unless otherwise noted. Soft-deleted re
 | DELETE | `/projects/:projectId` | Soft-delete project | Implemented               |
 | GET | `/projects/deleted` | List soft-deleted projects (ADMIN only) | Implemented |
 | POST | `/projects/:projectId/restore` | Restore soft-deleted project (ADMIN only) | Implemented |
-| GET | `/projects/:projectId/workload` | `[{ userId, username, openTicketCount }]` sorted ascending |                           |
+| GET | `/projects/:projectId/workload` | `[{ userId, username, openTicketCount }]` sorted ascending | Implemented |
 
 ### Tickets
 | Method | Path | Description | Status |

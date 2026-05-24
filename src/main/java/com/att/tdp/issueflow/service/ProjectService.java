@@ -3,12 +3,15 @@ package com.att.tdp.issueflow.service;
 import com.att.tdp.issueflow.dto.CreateProjectRequest;
 import com.att.tdp.issueflow.dto.ProjectResponse;
 import com.att.tdp.issueflow.dto.UpdateProjectRequest;
+import com.att.tdp.issueflow.dto.WorkloadResponse;
 import com.att.tdp.issueflow.entity.ActorType;
 import com.att.tdp.issueflow.entity.Project;
+import com.att.tdp.issueflow.entity.TicketStatus;
 import com.att.tdp.issueflow.entity.User;
 import com.att.tdp.issueflow.exception.ConflictException;
 import com.att.tdp.issueflow.exception.ResourceNotFoundException;
 import com.att.tdp.issueflow.repository.ProjectRepository;
+import com.att.tdp.issueflow.repository.TicketRepository;
 import com.att.tdp.issueflow.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -25,6 +28,7 @@ public class ProjectService {
     private final ProjectRepository projectRepository;
     private final UserRepository userRepository;
     private final AuditLogService auditLogService;
+    private final TicketRepository ticketRepository;
 
     public List<ProjectResponse> getAll() {
         return projectRepository.findAllByDeletedAtIsNull().stream()
@@ -84,6 +88,18 @@ public class ProjectService {
         ProjectResponse response = ProjectResponse.from(projectRepository.save(project));
         auditLogService.log("RESTORE", "PROJECT", id, ActorType.USER);
         return response;
+    }
+
+    public List<WorkloadResponse> getWorkload(Long projectId) {
+        findActiveOrThrow(projectId);
+        List<Object[]> rows = ticketRepository.countOpenTicketsByAssigneeForProject(projectId, TicketStatus.DONE);
+        return rows.stream()
+                .map(row -> WorkloadResponse.builder()
+                        .userId((Long) row[0])
+                        .username((String) row[1])
+                        .openTicketCount((Long) row[2])
+                        .build())
+                .toList();
     }
 
     private Project findActiveOrThrow(Long id) {

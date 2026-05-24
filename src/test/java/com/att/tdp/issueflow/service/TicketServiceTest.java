@@ -70,6 +70,22 @@ class TicketServiceTest {
         return req;
     }
 
+    private User buildDeveloper(Long id, LocalDateTime createdAt) {
+        return User.builder().id(id).username("dev" + id).email("dev" + id + "@x.com")
+                .fullName("Dev " + id).role(UserRole.DEVELOPER).password("h")
+                .createdAt(createdAt).build();
+    }
+
+    private CreateTicketRequest buildCreateRequest(Long projectId) {
+        CreateTicketRequest req = new CreateTicketRequest();
+        req.setTitle("T");
+        req.setStatus(TicketStatus.TODO);
+        req.setPriority(TicketPriority.LOW);
+        req.setType(TicketType.BUG);
+        req.setProjectId(projectId);
+        return req;
+    }
+
     // ── getByProject ──────────────────────────────────────────────────────────
 
     @Test
@@ -149,6 +165,98 @@ class TicketServiceTest {
                 .hasMessageContaining("99");
 
         verify(ticketRepository, never()).save(any());
+    }
+
+    // ── auto-assignment ───────────────────────────────────────────────────────
+
+    @Test
+    void create_noDeveloper_assigneeIsNullAndNoAutoAssignLog() {
+        Project project = buildProject(1L);
+        when(projectRepository.findByIdAndDeletedAtIsNull(1L)).thenReturn(Optional.of(project));
+        when(userRepository.findByRole(UserRole.DEVELOPER)).thenReturn(List.of());
+        when(ticketRepository.save(any())).thenAnswer(inv -> {
+            Ticket t = inv.getArgument(0);
+            t.setId(10L);
+            t.setCreatedAt(LocalDateTime.now());
+            return t;
+        });
+
+        TicketResponse response = ticketService.create(buildCreateRequest(1L));
+
+        assertThat(response.getAssigneeId()).isNull();
+        verify(auditLogService, never()).log(eq("AUTO_ASSIGN"), any(), any(), any(), any());
+    }
+
+    @Test
+    void create_tieBreaking_assignsEarliestCreatedDeveloper() {
+        Project project = buildProject(1L);
+        User dev1 = buildDeveloper(1L, LocalDateTime.of(2024, 3, 1, 0, 0)); // newer
+        User dev2 = buildDeveloper(2L, LocalDateTime.of(2024, 1, 1, 0, 0)); // older — should win
+
+        when(projectRepository.findByIdAndDeletedAtIsNull(1L)).thenReturn(Optional.of(project));
+        when(userRepository.findByRole(UserRole.DEVELOPER)).thenReturn(List.of(dev1, dev2));
+        when(ticketRepository.countByAssignee_IdAndProject_IdAndStatusNotAndDeletedAtIsNull(
+                1L, 1L, TicketStatus.DONE)).thenReturn(0L);
+        when(ticketRepository.countByAssignee_IdAndProject_IdAndStatusNotAndDeletedAtIsNull(
+                2L, 1L, TicketStatus.DONE)).thenReturn(0L);
+        when(ticketRepository.save(any())).thenAnswer(inv -> {
+            Ticket t = inv.getArgument(0);
+            t.setId(10L);
+            t.setCreatedAt(LocalDateTime.now());
+            return t;
+        });
+
+        ticketService.create(buildCreateRequest(1L));
+
+        verify(ticketRepository).save(argThat(t -> t.getAssignee() != null && t.getAssignee().getId().equals(2L)));
+        verify(auditLogService).log(eq("AUTO_ASSIGN"), eq("TICKET"), eq(10L), eq(ActorType.SYSTEM), eq("SYSTEM"));
+    }
+
+    @Test
+    void create_leastLoadedDeveloper_isAssigned() {
+        Project project = buildProject(1L);
+        User dev1 = buildDeveloper(1L, LocalDateTime.of(2024, 1, 1, 0, 0));
+        User dev2 = buildDeveloper(2L, LocalDateTime.of(2024, 1, 2, 0, 0));
+
+        when(projectRepository.findByIdAndDeletedAtIsNull(1L)).thenReturn(Optional.of(project));
+        when(userRepository.findByRole(UserRole.DEVELOPER)).thenReturn(List.of(dev1, dev2));
+        when(ticketRepository.countByAssignee_IdAndProject_IdAndStatusNotAndDeletedAtIsNull(
+                1L, 1L, TicketStatus.DONE)).thenReturn(3L); // dev1 is busy
+        when(ticketRepository.countByAssignee_IdAndProject_IdAndStatusNotAndDeletedAtIsNull(
+                2L, 1L, TicketStatus.DONE)).thenReturn(1L); // dev2 has fewer — should be picked
+        when(ticketRepository.save(any())).thenAnswer(inv -> {
+            Ticket t = inv.getArgument(0);
+            t.setId(10L);
+            t.setCreatedAt(LocalDateTime.now());
+            return t;
+        });
+
+        ticketService.create(buildCreateRequest(1L));
+
+        verify(ticketRepository).save(argThat(t -> t.getAssignee() != null && t.getAssignee().getId().equals(2L)));
+        verify(auditLogService).log(eq("AUTO_ASSIGN"), eq("TICKET"), eq(10L), eq(ActorType.SYSTEM), eq("SYSTEM"));
+    }
+
+    @Test
+    void create_explicitAssigneeId_skipsAutoAssignment() {
+        Project project = buildProject(1L);
+        User assignee = buildDeveloper(5L, LocalDateTime.now());
+
+        when(projectRepository.findByIdAndDeletedAtIsNull(1L)).thenReturn(Optional.of(project));
+        when(userRepository.findById(5L)).thenReturn(Optional.of(assignee));
+        when(ticketRepository.save(any())).thenAnswer(inv -> {
+            Ticket t = inv.getArgument(0);
+            t.setId(10L);
+            t.setCreatedAt(LocalDateTime.now());
+            return t;
+        });
+
+        CreateTicketRequest req = buildCreateRequest(1L);
+        req.setAssigneeId(5L);
+        ticketService.create(req);
+
+        verify(userRepository, never()).findByRole(any());
+        verify(auditLogService, never()).log(eq("AUTO_ASSIGN"), any(), any(), any(), any());
     }
 
     // ── status transitions — forward (allowed) ────────────────────────────────

@@ -105,3 +105,16 @@ Verify that soft delete works as intended for Tickets and Projects:
 - Make POST /tickets/:id/restore and POST /projects/:id/restore ADMIN only
 - Add role-based authorization to Spring Security for the ADMIN-only endpoints
 ```
+
+```
+Add auto-assignment logic to ticket creation only:
+- If assigneeId is absent, query all DEVELOPER users in the project
+- Assign the one with the fewest non-DONE tickets in that project
+- Break ties by earliest createdAt
+- If no DEVELOPERs exist, leave assigneeId = null
+- Log every auto-assignment to AuditLog with actor=SYSTEM, action=AUTO_ASSIGN
+- Implement GET /projects/:id/workload returning 
+  [{ userId, username, openTicketCount }] sorted ascending, with openTicketCount = count of non DONE tickets with assigneeId = userId
+- Implement forbidding auto-assignment by explicitly providing assigneeId in a PATCH /tickets/{id} request.
+Write unit tests for the tie-breaking and no-developer-found cases.
+```
