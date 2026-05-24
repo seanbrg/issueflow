@@ -140,7 +140,7 @@ All endpoints return `200 OK` on success unless otherwise noted. Soft-deleted re
 | GET | `/users/:userId` | Fetch user by id | Implemented |
 | POST | `/users/update/:userId` | Update `fullName` or `role` | Implemented |
 | DELETE | `/users/:userId` | Delete user | Implemented |
-| GET | `/users/:userId/mentions` | All comments mentioning this user, newest first (paginated). Query params: `page`, `pageSize` | |
+| GET | `/users/:userId/mentions` | All comments mentioning this user, newest first (paginated). Query params: `page`, `pageSize` | Implemented |
 
 ### Projects
 | Method | Path | Description | Status                    |
@@ -172,7 +172,7 @@ All endpoints return `200 OK` on success unless otherwise noted. Soft-deleted re
 |--------|------|-------------|--------|
 | GET | `/tickets/:ticketId/comments` | Fetch all comments for a ticket | Implemented |
 | POST | `/tickets/:ticketId/comments` | Add comment (`content`, `authorId`) | Implemented |
-| PATCH | `/tickets/:ticketId/comments/:commentId` | Update comment content; re-evaluates @mentions | Implemented (no @mention parsing) |
+| PATCH | `/tickets/:ticketId/comments/:commentId` | Update comment content; re-evaluates @mentions | Implemented |
 | DELETE | `/tickets/:ticketId/comments/:commentId` | Delete comment | Implemented |
 
 ### Audit Logs
@@ -181,11 +181,11 @@ All endpoints return `200 OK` on success unless otherwise noted. Soft-deleted re
 | GET | `/audit-logs` | Fetch all logs. Filterable by `entityType`, `entityId`, `action`, `actor` query params | Implemented  |
 
 ### Ticket Dependencies
-| Method | Path | Description | Status |
-|--------|------|-------------|--------|
-| POST | `/tickets/:ticketId/dependencies` | Add dependency: `{ "blockedBy": <ticketId> }` | |
-| GET | `/tickets/:ticketId/dependencies` | List all tickets blocking this ticket | |
-| DELETE | `/tickets/:ticketId/dependencies/:blockerId` | Remove a specific dependency | |
+| Method | Path | Description | Status       |
+|--------|------|-------------|--------------|
+| POST | `/tickets/:ticketId/dependencies` | Add dependency: `{ "blockedBy": <ticketId> }` | Implemented  |
+| GET | `/tickets/:ticketId/dependencies` | List all tickets blocking this ticket | Implemented  |
+| DELETE | `/tickets/:ticketId/dependencies/:blockerId` | Remove a specific dependency | Implemented |
 
 ### Attachments
 | Method | Path | Description | Status |

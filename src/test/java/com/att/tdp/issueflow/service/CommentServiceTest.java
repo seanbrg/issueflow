@@ -18,6 +18,7 @@ import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -294,5 +295,151 @@ class CommentServiceTest {
 
         verify(commentRepository, never()).delete(any());
         verify(auditLogService, never()).log(any(), any(), any(), any(), any());
+    }
+
+    // ── @mention parsing — create ─────────────────────────────────────────────
+
+    @Test
+    void create_contentWithKnownMention_persistsMentionedUser() {
+        Ticket ticket = buildTicket(1L);
+        User author = buildUser(2L);
+        User mentioned = buildUser(3L);  // username = "user3"
+        when(ticketRepository.findByIdAndDeletedAtIsNull(1L)).thenReturn(Optional.of(ticket));
+        when(userRepository.findById(2L)).thenReturn(Optional.of(author));
+        when(userRepository.findByUsernamesLowercase(Set.of("user3"))).thenReturn(List.of(mentioned));
+        when(commentRepository.save(any())).thenAnswer(inv -> {
+            Comment c = inv.getArgument(0);
+            c.setId(10L);
+            c.setCreatedAt(LocalDateTime.now());
+            c.setVersion(0L);
+            return c;
+        });
+
+        CreateCommentRequest request = new CreateCommentRequest();
+        request.setContent("Hey @user3 please review");
+        request.setAuthorId(2L);
+
+        CommentResponse response = commentService.create(1L, request);
+
+        assertThat(response.getMentionedUsers()).hasSize(1);
+        assertThat(response.getMentionedUsers().get(0).getId()).isEqualTo(3L);
+        assertThat(response.getMentionedUsers().get(0).getUsername()).isEqualTo("user3");
+    }
+
+    @Test
+    void create_contentWithUnknownMention_mentionedUsersIsEmpty() {
+        Ticket ticket = buildTicket(1L);
+        User author = buildUser(2L);
+        when(ticketRepository.findByIdAndDeletedAtIsNull(1L)).thenReturn(Optional.of(ticket));
+        when(userRepository.findById(2L)).thenReturn(Optional.of(author));
+        when(userRepository.findByUsernamesLowercase(Set.of("ghost"))).thenReturn(List.of());
+        when(commentRepository.save(any())).thenAnswer(inv -> {
+            Comment c = inv.getArgument(0);
+            c.setId(10L);
+            c.setCreatedAt(LocalDateTime.now());
+            c.setVersion(0L);
+            return c;
+        });
+
+        CreateCommentRequest request = new CreateCommentRequest();
+        request.setContent("Hey @ghost!");
+        request.setAuthorId(2L);
+
+        CommentResponse response = commentService.create(1L, request);
+
+        assertThat(response.getMentionedUsers()).isEmpty();
+    }
+
+    @Test
+    void create_mentionIsCaseInsensitive_matchesUser() {
+        Ticket ticket = buildTicket(1L);
+        User author = buildUser(2L);
+        User mentioned = buildUser(3L);  // username = "user3"
+        when(ticketRepository.findByIdAndDeletedAtIsNull(1L)).thenReturn(Optional.of(ticket));
+        when(userRepository.findById(2L)).thenReturn(Optional.of(author));
+        // Content uses uppercase; service lowercases before lookup
+        when(userRepository.findByUsernamesLowercase(Set.of("user3"))).thenReturn(List.of(mentioned));
+        when(commentRepository.save(any())).thenAnswer(inv -> {
+            Comment c = inv.getArgument(0);
+            c.setId(10L);
+            c.setCreatedAt(LocalDateTime.now());
+            c.setVersion(0L);
+            return c;
+        });
+
+        CreateCommentRequest request = new CreateCommentRequest();
+        request.setContent("Hey @USER3!");
+        request.setAuthorId(2L);
+
+        CommentResponse response = commentService.create(1L, request);
+
+        assertThat(response.getMentionedUsers()).hasSize(1);
+        assertThat(response.getMentionedUsers().get(0).getId()).isEqualTo(3L);
+    }
+
+    @Test
+    void create_noMentions_doesNotQueryUsernames() {
+        Ticket ticket = buildTicket(1L);
+        User author = buildUser(2L);
+        when(ticketRepository.findByIdAndDeletedAtIsNull(1L)).thenReturn(Optional.of(ticket));
+        when(userRepository.findById(2L)).thenReturn(Optional.of(author));
+        when(commentRepository.save(any())).thenAnswer(inv -> {
+            Comment c = inv.getArgument(0);
+            c.setId(10L);
+            c.setCreatedAt(LocalDateTime.now());
+            c.setVersion(0L);
+            return c;
+        });
+
+        CreateCommentRequest request = new CreateCommentRequest();
+        request.setContent("No mentions here");
+        request.setAuthorId(2L);
+
+        commentService.create(1L, request);
+
+        verify(userRepository, never()).findByUsernamesLowercase(any());
+    }
+
+    // ── @mention parsing — update ─────────────────────────────────────────────
+
+    @Test
+    void update_addsMentionOnEdit() {
+        Ticket ticket = buildTicket(1L);
+        User author = buildUser(2L);
+        User mentioned = buildUser(3L);
+        Comment comment = buildComment(10L, ticket, author); // no existing mentions
+        when(ticketRepository.findByIdAndDeletedAtIsNull(1L)).thenReturn(Optional.of(ticket));
+        when(commentRepository.findByIdAndTicket_Id(10L, 1L)).thenReturn(Optional.of(comment));
+        when(userRepository.findByUsernamesLowercase(Set.of("user3"))).thenReturn(List.of(mentioned));
+        when(commentRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        UpdateCommentRequest request = new UpdateCommentRequest();
+        request.setContent("Now mentioning @user3");
+
+        CommentResponse response = commentService.update(1L, 10L, request);
+
+        assertThat(response.getMentionedUsers()).hasSize(1);
+        assertThat(response.getMentionedUsers().get(0).getId()).isEqualTo(3L);
+    }
+
+    @Test
+    void update_removesMentionWhenNoLongerInContent() {
+        Ticket ticket = buildTicket(1L);
+        User author = buildUser(2L);
+        User previouslyMentioned = buildUser(3L);
+        Comment comment = buildComment(10L, ticket, author);
+        comment.getMentionedUsers().add(previouslyMentioned); // pre-existing mention
+        when(ticketRepository.findByIdAndDeletedAtIsNull(1L)).thenReturn(Optional.of(ticket));
+        when(commentRepository.findByIdAndTicket_Id(10L, 1L)).thenReturn(Optional.of(comment));
+        // New content has no mentions → parseMentions returns empty (tokens empty, no DB call)
+        when(commentRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        UpdateCommentRequest request = new UpdateCommentRequest();
+        request.setContent("No mentions anymore");
+
+        CommentResponse response = commentService.update(1L, 10L, request);
+
+        assertThat(response.getMentionedUsers()).isEmpty();
+        verify(userRepository, never()).findByUsernamesLowercase(any());
     }
 }

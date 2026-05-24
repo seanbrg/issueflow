@@ -1,6 +1,7 @@
 package com.att.tdp.issueflow.controller;
 
 import com.att.tdp.issueflow.dto.CreateUserRequest;
+import com.att.tdp.issueflow.dto.MentionsPageResponse;
 import com.att.tdp.issueflow.dto.UpdateUserRequest;
 import com.att.tdp.issueflow.dto.UserResponse;
 import com.att.tdp.issueflow.service.UserService;
@@ -43,5 +44,13 @@ public class UserController {
     public ResponseEntity<Void> delete(@PathVariable Long userId) {
         userService.delete(userId);
         return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/{userId}/mentions")
+    public ResponseEntity<MentionsPageResponse> getMentions(
+            @PathVariable Long userId,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "20") int pageSize) {
+        return ResponseEntity.ok(userService.getMentions(userId, page, pageSize));
     }
 }

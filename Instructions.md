@@ -129,3 +129,14 @@ Implement ticket dependencies:
   (add this check to the existing status transition logic in TicketService)
 Write unit tests for the blocking-DONE constraint.
 ```
+
+```
+Add @mention parsing to comments:
+- On create (POST) and update (PATCH) comment, scan content for @username patterns (case-insensitive)
+- Match against real usernames in the DB; ignore unmatched ones
+- Persist valid mentions as a MentionedUser many-to-many join
+- On update: diff old vs new — create new mentions, delete removed ones
+- Include mentionedUsers: [{ id, username, fullName }] in all comment responses
+- Implement GET /users/:id/mentions returning comments mentioning that user,
+  newest first, paginated
+```

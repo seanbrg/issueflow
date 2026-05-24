@@ -1,14 +1,20 @@
 package com.att.tdp.issueflow.service;
 
+import com.att.tdp.issueflow.dto.CommentResponse;
 import com.att.tdp.issueflow.dto.CreateUserRequest;
+import com.att.tdp.issueflow.dto.MentionsPageResponse;
 import com.att.tdp.issueflow.dto.UpdateUserRequest;
 import com.att.tdp.issueflow.dto.UserResponse;
 import com.att.tdp.issueflow.entity.ActorType;
 import com.att.tdp.issueflow.entity.User;
 import com.att.tdp.issueflow.exception.ConflictException;
 import com.att.tdp.issueflow.exception.ResourceNotFoundException;
+import com.att.tdp.issueflow.repository.CommentRepository;
 import com.att.tdp.issueflow.repository.UserRepository;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -21,6 +27,7 @@ public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final AuditLogService auditLogService;
+    private final CommentRepository commentRepository;
 
     public List<UserResponse> getAll() {
         return userRepository.findAll().stream()
@@ -72,6 +79,18 @@ public class UserService {
         findOrThrow(id);
         userRepository.deleteById(id);
         auditLogService.log("DELETE", "USER", id, ActorType.USER);
+    }
+
+    @Transactional
+    public MentionsPageResponse getMentions(Long userId, int page, int pageSize) {
+        findOrThrow(userId);
+        var found = commentRepository.findAllByMentionedUsers_Id(
+                userId, PageRequest.of(page - 1, pageSize, Sort.by("createdAt").descending()));
+        return MentionsPageResponse.builder()
+                .data(found.getContent().stream().map(CommentResponse::from).toList())
+                .total(found.getTotalElements())
+                .page(page)
+                .build();
     }
 
     private User findOrThrow(Long id) {
