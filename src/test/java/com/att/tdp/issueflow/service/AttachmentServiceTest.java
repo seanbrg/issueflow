@@ -28,6 +28,7 @@ class AttachmentServiceTest {
 
     @Mock AttachmentRepository attachmentRepository;
     @Mock TicketRepository ticketRepository;
+    @Mock AuditLogService auditLogService;
     @InjectMocks AttachmentService attachmentService;
 
     // ── helpers ───────────────────────────────────────────────────────────────

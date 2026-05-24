@@ -47,7 +47,7 @@ public class TicketController {
 
     @PatchMapping("/{ticketId}")
     public ResponseEntity<TicketResponse> update(@PathVariable Long ticketId,
-                                                 @RequestBody UpdateTicketRequest request) {
+                                                 @Valid @RequestBody UpdateTicketRequest request) {
         return ResponseEntity.ok(ticketService.update(ticketId, request));
     }
 

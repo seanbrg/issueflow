@@ -174,3 +174,12 @@ Implement file attachments on tickets:
 - Reject MIME types other than image/png, image/jpeg, application/pdf,
   text/plain with 400
 ```
+
+```
+Review the entire codebase for consistency, with README.md being the single source of truth:
+- Make sure every endpoint has input validation with informative error messages
+- Make sure every state-changing endpoint writes to AuditLog
+- Make sure soft-deleted records are excluded from all standard GET responses
+- Write run.md with exact steps to: install dependencies, start Docker DB, 
+  build the project, run the app, and run the tests
+```

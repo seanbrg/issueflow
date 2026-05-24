@@ -1,6 +1,7 @@
 package com.att.tdp.issueflow.service;
 
 import com.att.tdp.issueflow.dto.AttachmentResponse;
+import com.att.tdp.issueflow.entity.ActorType;
 import com.att.tdp.issueflow.entity.Attachment;
 import com.att.tdp.issueflow.entity.Ticket;
 import com.att.tdp.issueflow.exception.BadRequestException;
@@ -26,6 +27,7 @@ public class AttachmentService {
 
     private final AttachmentRepository attachmentRepository;
     private final TicketRepository ticketRepository;
+    private final AuditLogService auditLogService;
 
     public AttachmentResponse upload(Long ticketId, MultipartFile file) {
         Ticket ticket = ticketRepository.findByIdAndDeletedAtIsNull(ticketId)
@@ -40,7 +42,9 @@ public class AttachmentService {
                     .contentType(file.getContentType())
                     .data(file.getBytes())
                     .build();
-            return AttachmentResponse.from(attachmentRepository.save(attachment));
+            Attachment saved = attachmentRepository.save(attachment);
+            auditLogService.log("UPLOAD_ATTACHMENT", "ATTACHMENT", saved.getId(), ActorType.USER);
+            return AttachmentResponse.from(saved);
         } catch (IOException e) {
             throw new BadRequestException("Failed to read uploaded file: " + e.getMessage());
         }
@@ -53,6 +57,7 @@ public class AttachmentService {
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Attachment not found: " + attachmentId + " on ticket: " + ticketId));
         attachmentRepository.delete(attachment);
+        auditLogService.log("DELETE_ATTACHMENT", "ATTACHMENT", attachmentId, ActorType.USER);
     }
 
     // ── validation ────────────────────────────────────────────────────────────

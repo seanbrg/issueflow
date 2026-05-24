@@ -1,6 +1,7 @@
 package com.att.tdp.issueflow.service;
 
 import com.att.tdp.issueflow.dto.TicketDependencySummaryResponse;
+import com.att.tdp.issueflow.entity.ActorType;
 import com.att.tdp.issueflow.entity.Ticket;
 import com.att.tdp.issueflow.entity.TicketDependency;
 import com.att.tdp.issueflow.entity.TicketDependencyId;
@@ -22,6 +23,7 @@ public class TicketDependencyService {
 
     private final TicketDependencyRepository dependencyRepository;
     private final TicketRepository ticketRepository;
+    private final AuditLogService auditLogService;
 
     public TicketDependencySummaryResponse addDependency(Long ticketId, Long blockedById) {
         Ticket ticket = ticketRepository.findByIdAndDeletedAtIsNull(ticketId)
@@ -45,6 +47,7 @@ public class TicketDependencyService {
         dependencyRepository.save(
                 new TicketDependency(new TicketDependencyId(ticketId, blockedById), ticket, blocker));
 
+        auditLogService.log("ADD_DEPENDENCY", "TICKET", ticketId, ActorType.USER);
         return TicketDependencySummaryResponse.from(blocker);
     }
 
@@ -61,6 +64,7 @@ public class TicketDependencyService {
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Dependency not found: ticket " + ticketId + " blocked by " + blockerId));
         dependencyRepository.delete(dep);
+        auditLogService.log("REMOVE_DEPENDENCY", "TICKET", ticketId, ActorType.USER);
     }
 
     /**

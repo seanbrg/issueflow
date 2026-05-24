@@ -36,7 +36,7 @@ public class UserController {
 
     @PostMapping("/update/{userId}")
     public ResponseEntity<UserResponse> update(@PathVariable Long userId,
-                                               @RequestBody UpdateUserRequest request) {
+                                               @Valid @RequestBody UpdateUserRequest request) {
         return ResponseEntity.ok(userService.update(userId, request));
     }
 
