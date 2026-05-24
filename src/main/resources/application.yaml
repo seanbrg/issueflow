@@ -20,6 +20,9 @@ spring:
     multipart:
       max-file-size: 10MB
       max-request-size: 10MB
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
 
 jwt:
   # Base64-encoded "secretsecretsecretsecretsecretsecret" — override via JWT_SECRET env var in production

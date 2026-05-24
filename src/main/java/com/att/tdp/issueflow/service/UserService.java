@@ -3,6 +3,7 @@ package com.att.tdp.issueflow.service;
 import com.att.tdp.issueflow.dto.CreateUserRequest;
 import com.att.tdp.issueflow.dto.UpdateUserRequest;
 import com.att.tdp.issueflow.dto.UserResponse;
+import com.att.tdp.issueflow.entity.ActorType;
 import com.att.tdp.issueflow.entity.User;
 import com.att.tdp.issueflow.exception.ConflictException;
 import com.att.tdp.issueflow.exception.ResourceNotFoundException;
@@ -19,6 +20,7 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final AuditLogService auditLogService;
 
     public List<UserResponse> getAll() {
         return userRepository.findAll().stream()
@@ -45,7 +47,9 @@ public class UserService {
                 .password(request.getPassword() != null
                         ? passwordEncoder.encode(request.getPassword()) : null)
                 .build();
-        return UserResponse.from(userRepository.save(user));
+        User saved = userRepository.save(user);
+        auditLogService.log("CREATE", "USER", saved.getId(), ActorType.USER);
+        return UserResponse.from(saved);
     }
 
     public UserResponse update(Long id, UpdateUserRequest request) {
@@ -59,12 +63,15 @@ public class UserService {
         if (request.getPassword() != null) {
             user.setPassword(passwordEncoder.encode(request.getPassword()));
         }
-        return UserResponse.from(userRepository.save(user));
+        User saved = userRepository.save(user);
+        auditLogService.log("UPDATE", "USER", id, ActorType.USER);
+        return UserResponse.from(saved);
     }
 
     public void delete(Long id) {
         findOrThrow(id);
         userRepository.deleteById(id);
+        auditLogService.log("DELETE", "USER", id, ActorType.USER);
     }
 
     private User findOrThrow(Long id) {

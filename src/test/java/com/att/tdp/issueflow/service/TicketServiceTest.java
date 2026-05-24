@@ -262,7 +262,7 @@ class TicketServiceTest {
 
         verify(ticketRepository, never()).deleteById(anyLong());
         verify(ticketRepository).save(argThat(t -> t.getDeletedAt() != null));
-        verify(auditLogService).log(eq("DELETE"), eq("TICKET"), eq(1L), any(ActorType.class), anyString());
+        verify(auditLogService).log(eq("DELETE"), eq("TICKET"), eq(1L), any(ActorType.class));
     }
 
     @Test
@@ -290,7 +290,7 @@ class TicketServiceTest {
 
         assertThat(response.getTitle()).isEqualTo("Ticket 1");
         verify(ticketRepository).save(argThat(t -> t.getDeletedAt() == null));
-        verify(auditLogService).log(eq("RESTORE"), eq("TICKET"), eq(1L), any(ActorType.class), anyString());
+        verify(auditLogService).log(eq("RESTORE"), eq("TICKET"), eq(1L), any(ActorType.class));
     }
 
     @Test

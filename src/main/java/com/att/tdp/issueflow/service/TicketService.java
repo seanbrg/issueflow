@@ -65,7 +65,9 @@ public class TicketService {
                 .overdue(false)
                 .build();
 
-        return TicketResponse.from(ticketRepository.save(ticket));
+        Ticket saved = ticketRepository.save(ticket);
+        auditLogService.log("CREATE", "TICKET", saved.getId(), ActorType.USER);
+        return TicketResponse.from(saved);
     }
 
     public TicketResponse update(Long id, UpdateTicketRequest request) {
@@ -90,14 +92,16 @@ public class TicketService {
             ticket.setAssignee(assignee);
         }
 
-        return TicketResponse.from(ticketRepository.save(ticket));
+        Ticket updated = ticketRepository.save(ticket);
+        auditLogService.log("UPDATE", "TICKET", id, ActorType.USER);
+        return TicketResponse.from(updated);
     }
 
     public void softDelete(Long id) {
         Ticket ticket = findActiveOrThrow(id);
         ticket.setDeletedAt(LocalDateTime.now());
         ticketRepository.save(ticket);
-        auditLogService.log("DELETE", "TICKET", id, ActorType.USER, "SYSTEM");
+        auditLogService.log("DELETE", "TICKET", id, ActorType.USER);
     }
 
     public TicketResponse restore(Long id) {
@@ -108,7 +112,7 @@ public class TicketService {
         }
         ticket.setDeletedAt(null);
         TicketResponse response = TicketResponse.from(ticketRepository.save(ticket));
-        auditLogService.log("RESTORE", "TICKET", id, ActorType.USER, "SYSTEM");
+        auditLogService.log("RESTORE", "TICKET", id, ActorType.USER);
         return response;
     }
 

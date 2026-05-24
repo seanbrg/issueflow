@@ -50,7 +50,7 @@ public class ProjectService {
                 .description(request.getDescription())
                 .owner(owner)
                 .build());
-        auditLogService.log("CREATE", "PROJECT", saved.getId(), ActorType.USER, "SYSTEM");
+        auditLogService.log("CREATE", "PROJECT", saved.getId(), ActorType.USER);
         return ProjectResponse.from(saved);
     }
 
@@ -63,7 +63,7 @@ public class ProjectService {
             project.setDescription(request.getDescription());
         }
         ProjectResponse response = ProjectResponse.from(projectRepository.save(project));
-        auditLogService.log("UPDATE", "PROJECT", id, ActorType.USER, "SYSTEM");
+        auditLogService.log("UPDATE", "PROJECT", id, ActorType.USER);
         return response;
     }
 
@@ -71,7 +71,7 @@ public class ProjectService {
         Project project = findActiveOrThrow(id);
         project.setDeletedAt(LocalDateTime.now());
         projectRepository.save(project);
-        auditLogService.log("DELETE", "PROJECT", id, ActorType.USER, "SYSTEM");
+        auditLogService.log("DELETE", "PROJECT", id, ActorType.USER);
     }
 
     public ProjectResponse restore(Long id) {
@@ -82,7 +82,7 @@ public class ProjectService {
         }
         project.setDeletedAt(null);
         ProjectResponse response = ProjectResponse.from(projectRepository.save(project));
-        auditLogService.log("RESTORE", "PROJECT", id, ActorType.USER, "SYSTEM");
+        auditLogService.log("RESTORE", "PROJECT", id, ActorType.USER);
         return response;
     }
 

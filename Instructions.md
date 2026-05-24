@@ -85,3 +85,13 @@ Enforce optimistic locking (return 409 on conflict).
 Do not implement @mention parsing yet.
 Write unit tests for the service layer.
 ```
+
+```
+Implement the AuditLog feature:
+- Review AuditLogService and the method
+  log(action, entityType, entityId, actor, performedBy) according to specs
+- Inject AuditLogService into the existing User, Project, Ticket, and Comment
+  services and add log() calls after every state-changing operation
+- Implement GET /audit-logs with optional query param filters:
+  entityType, entityId, action, actor
+```

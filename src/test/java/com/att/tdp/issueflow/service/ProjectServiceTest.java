@@ -134,7 +134,7 @@ class ProjectServiceTest {
         assertThat(response.getName()).isEqualTo("New Project");
         assertThat(response.getOwnerId()).isEqualTo(1L);
         verify(projectRepository).save(any());
-        verify(auditLogService).log(eq("CREATE"), eq("PROJECT"), eq(5L), any(ActorType.class), anyString());
+        verify(auditLogService).log(eq("CREATE"), eq("PROJECT"), eq(5L), any(ActorType.class));
     }
 
     @Test
@@ -170,7 +170,7 @@ class ProjectServiceTest {
 
         assertThat(response.getName()).isEqualTo("New Name");
         assertThat(response.getDescription()).isEqualTo("New Desc");
-        verify(auditLogService).log(eq("UPDATE"), eq("PROJECT"), eq(1L), any(ActorType.class), anyString());
+        verify(auditLogService).log(eq("UPDATE"), eq("PROJECT"), eq(1L), any(ActorType.class));
     }
 
     @Test
@@ -211,7 +211,7 @@ class ProjectServiceTest {
 
         verify(projectRepository, never()).deleteById(anyLong());
         verify(projectRepository).save(argThat(p -> p.getDeletedAt() != null));
-        verify(auditLogService).log(eq("DELETE"), eq("PROJECT"), eq(1L), any(ActorType.class), anyString());
+        verify(auditLogService).log(eq("DELETE"), eq("PROJECT"), eq(1L), any(ActorType.class));
     }
 
     @Test
@@ -240,7 +240,7 @@ class ProjectServiceTest {
 
         assertThat(response.getName()).isEqualTo("Alpha");
         verify(projectRepository).save(argThat(p -> p.getDeletedAt() == null));
-        verify(auditLogService).log(eq("RESTORE"), eq("PROJECT"), eq(1L), any(ActorType.class), anyString());
+        verify(auditLogService).log(eq("RESTORE"), eq("PROJECT"), eq(1L), any(ActorType.class));
     }
 
     @Test
