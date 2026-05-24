@@ -140,3 +140,16 @@ Add @mention parsing to comments:
 - Implement GET /users/:id/mentions returning comments mentioning that user,
   newest first, paginated
 ```
+
+```
+Implement the auto-escalation scheduled task:
+- Create a @Scheduled method that runs periodically (every hour)
+- For each non-DONE ticket with a dueDate in the past and priority < CRITICAL: 
+  promote priority one level
+- When a ticket hits CRITICAL and is still overdue, set flag is_overdue = true
+- Ensure is_overdue is visible in all GET /tickets queries
+- Escalation is idempotent: never escalate beyond CRITICAL. Escalation can only change priority and is_overdue.
+- A manual PATCH /tickets/:id that changes priority resets is_overdue to false
+- Log each escalation to AuditLog with actor=SYSTEM
+Write a unit test that mocks the clock to verify promotion logic.
+```

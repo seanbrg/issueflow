@@ -97,7 +97,10 @@ public class TicketService {
         }
         if (request.getTitle() != null) ticket.setTitle(request.getTitle());
         if (request.getDescription() != null) ticket.setDescription(request.getDescription());
-        if (request.getPriority() != null) ticket.setPriority(request.getPriority());
+        if (request.getPriority() != null) {
+            ticket.setPriority(request.getPriority());
+            ticket.setOverdue(false);
+        }
         if (request.getType() != null) ticket.setType(request.getType());
         if (request.getDueDate() != null) ticket.setDueDate(request.getDueDate());
         if (request.getAssigneeId() != null) {
