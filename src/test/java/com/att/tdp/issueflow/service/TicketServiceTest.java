@@ -8,6 +8,7 @@ import com.att.tdp.issueflow.exception.BadRequestException;
 import com.att.tdp.issueflow.exception.ConflictException;
 import com.att.tdp.issueflow.exception.ResourceNotFoundException;
 import com.att.tdp.issueflow.repository.ProjectRepository;
+import com.att.tdp.issueflow.repository.TicketDependencyRepository;
 import com.att.tdp.issueflow.repository.TicketRepository;
 import com.att.tdp.issueflow.repository.UserRepository;
 import org.junit.jupiter.api.Test;
@@ -34,6 +35,7 @@ class TicketServiceTest {
     @Mock ProjectRepository projectRepository;
     @Mock UserRepository userRepository;
     @Mock AuditLogService auditLogService;
+    @Mock TicketDependencyRepository ticketDependencyRepository;
     @InjectMocks TicketService ticketService;
 
     // ── helpers ───────────────────────────────────────────────────────────────
@@ -438,5 +440,48 @@ class TicketServiceTest {
 
         assertThat(result).hasSize(1);
         assertThat(result.get(0).getId()).isEqualTo(5L);
+    }
+
+    // ── dependency blocking — DONE transition ─────────────────────────────────
+
+    @Test
+    void update_toDone_withUnresolvedBlockers_throwsBadRequest() {
+        when(ticketRepository.findByIdAndDeletedAtIsNull(1L))
+                .thenReturn(Optional.of(buildTicket(1L, TicketStatus.IN_PROGRESS)));
+        when(ticketDependencyRepository.existsByTicket_IdAndBlockedBy_StatusNot(1L, TicketStatus.DONE))
+                .thenReturn(true);
+
+        assertThatThrownBy(() -> ticketService.update(1L, statusRequest(TicketStatus.DONE)))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessageContaining("unresolved blockers");
+
+        verify(ticketRepository, never()).save(any());
+    }
+
+    @Test
+    void update_toDone_withAllBlockersDone_succeeds() {
+        when(ticketRepository.findByIdAndDeletedAtIsNull(1L))
+                .thenReturn(Optional.of(buildTicket(1L, TicketStatus.IN_PROGRESS)));
+        when(ticketDependencyRepository.existsByTicket_IdAndBlockedBy_StatusNot(1L, TicketStatus.DONE))
+                .thenReturn(false);
+        when(ticketRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        TicketResponse response = ticketService.update(1L, statusRequest(TicketStatus.DONE));
+
+        assertThat(response.getStatus()).isEqualTo("DONE");
+        verify(ticketRepository).save(any());
+    }
+
+    @Test
+    void update_toDone_noBlockers_succeeds() {
+        when(ticketRepository.findByIdAndDeletedAtIsNull(1L))
+                .thenReturn(Optional.of(buildTicket(1L, TicketStatus.IN_REVIEW)));
+        // Mockito returns false by default — no blockers exist
+        when(ticketRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        TicketResponse response = ticketService.update(1L, statusRequest(TicketStatus.DONE));
+
+        assertThat(response.getStatus()).isEqualTo("DONE");
+        verify(ticketDependencyRepository).existsByTicket_IdAndBlockedBy_StatusNot(1L, TicketStatus.DONE);
     }
 }

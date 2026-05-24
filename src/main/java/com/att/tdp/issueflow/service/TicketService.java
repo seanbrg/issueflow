@@ -8,6 +8,7 @@ import com.att.tdp.issueflow.exception.BadRequestException;
 import com.att.tdp.issueflow.exception.ConflictException;
 import com.att.tdp.issueflow.exception.ResourceNotFoundException;
 import com.att.tdp.issueflow.repository.ProjectRepository;
+import com.att.tdp.issueflow.repository.TicketDependencyRepository;
 import com.att.tdp.issueflow.repository.TicketRepository;
 import com.att.tdp.issueflow.repository.UserRepository;
 import jakarta.transaction.Transactional;
@@ -27,6 +28,7 @@ public class TicketService {
     private final ProjectRepository projectRepository;
     private final UserRepository userRepository;
     private final AuditLogService auditLogService;
+    private final TicketDependencyRepository ticketDependencyRepository;
 
     public List<TicketResponse> getByProject(Long projectId) {
         return ticketRepository.findAllByProject_IdAndDeletedAtIsNull(projectId).stream()
@@ -87,6 +89,10 @@ public class TicketService {
 
         if (request.getStatus() != null) {
             validateTransition(ticket.getStatus(), request.getStatus());
+            if (request.getStatus() == TicketStatus.DONE &&
+                    ticketDependencyRepository.existsByTicket_IdAndBlockedBy_StatusNot(id, TicketStatus.DONE)) {
+                throw new BadRequestException("Cannot transition to DONE: ticket has unresolved blockers");
+            }
             ticket.setStatus(request.getStatus());
         }
         if (request.getTitle() != null) ticket.setTitle(request.getTitle());

@@ -118,3 +118,14 @@ Add auto-assignment logic to ticket creation only:
 - Implement forbidding auto-assignment by explicitly providing assigneeId in a PATCH /tickets/{id} request.
 Write unit tests for the tie-breaking and no-developer-found cases.
 ```
+
+```
+Implement ticket dependencies:
+- POST /tickets/:id/dependencies with body { "blockedBy": <id> }
+- GET /tickets/:id/dependencies
+- DELETE /tickets/:id/dependencies/:blockerId
+- Enforce: both tickets must belong to the same project
+- Enforce: a ticket cannot transition to DONE if any blocker is not DONE
+  (add this check to the existing status transition logic in TicketService)
+Write unit tests for the blocking-DONE constraint.
+```
