@@ -95,3 +95,13 @@ Implement the AuditLog feature:
 - Implement GET /audit-logs with optional query param filters:
   entityType, entityId, action, actor
 ```
+
+```
+Verify that soft delete works as intended for Tickets and Projects:
+- DELETE endpoints set deletedAt instead of physically deleting
+- All existing GET endpoints must exclude soft-deleted records
+  (add deletedAt IS NULL conditions)
+- Make GET /tickets/deleted?projectId= and GET /projects/deleted ADMIN only: add role constraints by checking the user entity's role field
+- Make POST /tickets/:id/restore and POST /projects/:id/restore ADMIN only
+- Add role-based authorization to Spring Security for the ADMIN-only endpoints
+```

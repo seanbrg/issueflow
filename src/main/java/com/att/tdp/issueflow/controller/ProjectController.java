@@ -7,6 +7,7 @@ import com.att.tdp.issueflow.service.ProjectService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -23,6 +24,7 @@ public class ProjectController {
         return ResponseEntity.ok(projectService.getAll());
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/deleted")
     public ResponseEntity<List<ProjectResponse>> getDeleted() {
         return ResponseEntity.ok(projectService.getDeleted());
@@ -50,6 +52,7 @@ public class ProjectController {
         return ResponseEntity.ok().build();
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/{projectId}/restore")
     public ResponseEntity<ProjectResponse> restore(@PathVariable Long projectId) {
         return ResponseEntity.ok(projectService.restore(projectId));

@@ -150,8 +150,8 @@ All endpoints return `200 OK` on success unless otherwise noted. Soft-deleted re
 | GET | `/projects/:projectId` | Fetch project by id | Implemented               |
 | PATCH | `/projects/:projectId` | Update `name` or `description` | Implemented               |
 | DELETE | `/projects/:projectId` | Soft-delete project | Implemented               |
-| GET | `/projects/deleted` | List soft-deleted projects (ADMIN only) | Implemented (no ADMIN enforcement) |
-| POST | `/projects/:projectId/restore` | Restore soft-deleted project (ADMIN only) | Implemented (no ADMIN enforcement) |
+| GET | `/projects/deleted` | List soft-deleted projects (ADMIN only) | Implemented |
+| POST | `/projects/:projectId/restore` | Restore soft-deleted project (ADMIN only) | Implemented |
 | GET | `/projects/:projectId/workload` | `[{ userId, username, openTicketCount }]` sorted ascending |                           |
 
 ### Tickets
@@ -162,8 +162,8 @@ All endpoints return `200 OK` on success unless otherwise noted. Soft-deleted re
 | GET | `/tickets/:ticketId` | Fetch ticket by id | Implemented |
 | PATCH | `/tickets/:ticketId` | Update ticket fields (cannot update DONE tickets; status forward-only) | Implemented |
 | DELETE | `/tickets/:ticketId` | Soft-delete ticket | Implemented |
-| GET | `/tickets/deleted?projectId=:projectId` | List soft-deleted tickets (ADMIN only) | Implemented (no ADMIN enforcement) |
-| POST | `/tickets/:ticketId/restore` | Restore soft-deleted ticket (ADMIN only) | Implemented (no ADMIN enforcement) |
+| GET | `/tickets/deleted?projectId=:projectId` | List soft-deleted tickets (ADMIN only) | Implemented |
+| POST | `/tickets/:ticketId/restore` | Restore soft-deleted ticket (ADMIN only) | Implemented |
 | GET | `/tickets/export?projectId=:projectId` | Export tickets as CSV (`id, title, description, status, priority, type, assigneeId`) | |
 | POST | `/tickets/import` | Import tickets from CSV (`multipart/form-data` with `projectId` field). Returns `{ created, failed, errors }` | |
 
@@ -176,9 +176,9 @@ All endpoints return `200 OK` on success unless otherwise noted. Soft-deleted re
 | DELETE | `/tickets/:ticketId/comments/:commentId` | Delete comment | Implemented |
 
 ### Audit Logs
-| Method | Path | Description | Status |
-|--------|------|-------------|--------|
-| GET | `/audit-logs` | Fetch all logs. Filterable by `entityType`, `entityId`, `action`, `actor` query params | |
+| Method | Path | Description | Status       |
+|--------|------|-------------|--------------|
+| GET | `/audit-logs` | Fetch all logs. Filterable by `entityType`, `entityId`, `action`, `actor` query params | Implemented  |
 
 ### Ticket Dependencies
 | Method | Path | Description | Status |

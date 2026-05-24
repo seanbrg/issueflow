@@ -7,6 +7,7 @@ import com.att.tdp.issueflow.service.TicketService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -23,6 +24,7 @@ public class TicketController {
         return ResponseEntity.ok(ticketService.getByProject(projectId));
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/deleted")
     public ResponseEntity<List<TicketResponse>> getDeleted(@RequestParam Long projectId) {
         return ResponseEntity.ok(ticketService.getDeleted(projectId));
@@ -50,6 +52,7 @@ public class TicketController {
         return ResponseEntity.ok().build();
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/{ticketId}/restore")
     public ResponseEntity<TicketResponse> restore(@PathVariable Long ticketId) {
         return ResponseEntity.ok(ticketService.restore(ticketId));

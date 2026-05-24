@@ -2,7 +2,8 @@ package com.att.tdp.issueflow.controller;
 
 import com.att.tdp.issueflow.entity.User;
 import com.att.tdp.issueflow.entity.UserRole;
-import com.att.tdp.issueflow.repository.UserRepository;
+import com.att.tdp.issueflow.repository.*;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,6 +25,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class AuthControllerTest {
 
     @Autowired MockMvc mockMvc;
+    @Autowired CommentRepository commentRepository;
+    @Autowired AuditLogRepository auditLogRepository;
+    @Autowired TicketRepository ticketRepository;
+    @Autowired ProjectRepository projectRepository;
     @Autowired UserRepository userRepository;
     @Autowired PasswordEncoder passwordEncoder;
 
@@ -32,6 +37,10 @@ class AuthControllerTest {
 
     @BeforeEach
     void setUp() {
+        commentRepository.deleteAll();
+        auditLogRepository.deleteAll();
+        ticketRepository.deleteAll();
+        projectRepository.deleteAll();
         userRepository.deleteAll();
         userRepository.save(User.builder()
                 .username(USERNAME)

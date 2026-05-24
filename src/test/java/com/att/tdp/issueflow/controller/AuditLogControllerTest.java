@@ -4,8 +4,7 @@ import com.att.tdp.issueflow.entity.ActorType;
 import com.att.tdp.issueflow.entity.AuditLog;
 import com.att.tdp.issueflow.entity.User;
 import com.att.tdp.issueflow.entity.UserRole;
-import com.att.tdp.issueflow.repository.AuditLogRepository;
-import com.att.tdp.issueflow.repository.UserRepository;
+import com.att.tdp.issueflow.repository.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,6 +26,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class AuditLogControllerTest {
 
     @Autowired MockMvc mockMvc;
+    @Autowired CommentRepository commentRepository;
+    @Autowired TicketRepository ticketRepository;
+    @Autowired ProjectRepository projectRepository;
     @Autowired AuditLogRepository auditLogRepository;
     @Autowired UserRepository userRepository;
     @Autowired PasswordEncoder passwordEncoder;
@@ -38,7 +40,10 @@ class AuditLogControllerTest {
 
     @BeforeEach
     void setUp() throws Exception {
+        commentRepository.deleteAll();
         auditLogRepository.deleteAll();
+        ticketRepository.deleteAll();
+        projectRepository.deleteAll();
         userRepository.deleteAll();
         userRepository.save(User.builder()
                 .username(USERNAME)
