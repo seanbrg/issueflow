@@ -190,8 +190,8 @@ All endpoints return `200 OK` on success unless otherwise noted. Soft-deleted re
 ### Attachments
 | Method | Path | Description | Status |
 |--------|------|-------------|--------|
-| POST | `/tickets/:ticketId/attachments` | Upload file (multipart, max 10 MB, allowed types only) | |
-| DELETE | `/tickets/:ticketId/attachments/:attachmentId` | Delete attachment | |
+| POST | `/tickets/:ticketId/attachments` | Upload file (multipart, max 10 MB, allowed types only) | Implemented |
+| DELETE | `/tickets/:ticketId/attachments/:attachmentId` | Delete attachment | Implemented |
 
 ---
 

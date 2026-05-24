@@ -1,5 +1,5 @@
 ```
-Read CLAUDE.md. Create all JPA entity classes and enums for the domain model:
+Create all JPA entity classes and enums for the domain model:
 User, Project, Ticket, Comment, AuditLog, TicketDependency, Attachment.
 Include all fields, relationships (@ManyToOne, @OneToMany etc.), and Lombok
 annotations. Add @Version fields to Ticket and Comment for optimistic locking.
@@ -163,4 +163,14 @@ Implement ticket CSV export and import using Apache Commons CSV:
   { "created": N, "failed": N, "errors": [...] }
 - Handle commas and quotes inside field values correctly
   Write a unit test for the import with a sample CSV that includes edge cases.
+```
+
+```
+Implement file attachments on tickets:
+- POST /tickets/:id/attachments — multipart upload, store file bytes in DB
+  or on disk (response structure: { "id": 1, "ticketId": 1, "filename": "screenshot.png", "contentType": "image/png" } )
+- DELETE /tickets/:id/attachments/:attachmentId
+- Reject files over 10 MB with 400
+- Reject MIME types other than image/png, image/jpeg, application/pdf,
+  text/plain with 400
 ```
