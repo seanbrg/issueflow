@@ -164,8 +164,8 @@ All endpoints return `200 OK` on success unless otherwise noted. Soft-deleted re
 | DELETE | `/tickets/:ticketId` | Soft-delete ticket | Implemented |
 | GET | `/tickets/deleted?projectId=:projectId` | List soft-deleted tickets (ADMIN only) | Implemented |
 | POST | `/tickets/:ticketId/restore` | Restore soft-deleted ticket (ADMIN only) | Implemented |
-| GET | `/tickets/export?projectId=:projectId` | Export tickets as CSV (`id, title, description, status, priority, type, assigneeId`) | |
-| POST | `/tickets/import` | Import tickets from CSV (`multipart/form-data` with `projectId` field). Returns `{ created, failed, errors }` | |
+| GET | `/tickets/export?projectId=:projectId` | Export tickets as CSV (`id, title, description, status, priority, type, assigneeId`) | Implemented |
+| POST | `/tickets/import` | Import tickets from CSV (`multipart/form-data` with `projectId` field). Returns `{ created, failed, errors }` | Implemented |
 
 ### Comments
 | Method | Path | Description | Status |

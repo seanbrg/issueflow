@@ -153,3 +153,14 @@ Implement the auto-escalation scheduled task:
 - Log each escalation to AuditLog with actor=SYSTEM
 Write a unit test that mocks the clock to verify promotion logic.
 ```
+
+```
+Implement ticket CSV export and import using Apache Commons CSV:
+- GET /tickets/export?projectId= returns Content-Type: text/csv with fields:
+  id, title, description, status, priority, type, assigneeId
+- POST /tickets/import accepts multipart/form-data with a CSV file and
+  projectId field. Creates tickets in bulk. Returns:
+  { "created": N, "failed": N, "errors": [...] }
+- Handle commas and quotes inside field values correctly
+  Write a unit test for the import with a sample CSV that includes edge cases.
+```

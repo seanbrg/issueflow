@@ -1,14 +1,18 @@
 package com.att.tdp.issueflow.controller;
 
 import com.att.tdp.issueflow.dto.CreateTicketRequest;
+import com.att.tdp.issueflow.dto.CsvImportResult;
 import com.att.tdp.issueflow.dto.TicketResponse;
 import com.att.tdp.issueflow.dto.UpdateTicketRequest;
+import com.att.tdp.issueflow.service.TicketCsvService;
 import com.att.tdp.issueflow.service.TicketService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -18,6 +22,7 @@ import java.util.List;
 public class TicketController {
 
     private final TicketService ticketService;
+    private final TicketCsvService ticketCsvService;
 
     @GetMapping
     public ResponseEntity<List<TicketResponse>> getByProject(@RequestParam Long projectId) {
@@ -56,5 +61,21 @@ public class TicketController {
     @PostMapping("/{ticketId}/restore")
     public ResponseEntity<TicketResponse> restore(@PathVariable Long ticketId) {
         return ResponseEntity.ok(ticketService.restore(ticketId));
+    }
+
+    @GetMapping("/export")
+    public ResponseEntity<byte[]> export(@RequestParam Long projectId) {
+        byte[] csv = ticketCsvService.export(projectId);
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType("text/csv"))
+                .header("Content-Disposition", "attachment; filename=\"tickets.csv\"")
+                .body(csv);
+    }
+
+    @PostMapping("/import")
+    public ResponseEntity<CsvImportResult> importCsv(
+            @RequestParam("file") MultipartFile file,
+            @RequestParam Long projectId) {
+        return ResponseEntity.ok(ticketCsvService.importCsv(file, projectId));
     }
 }
